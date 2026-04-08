@@ -98,17 +98,27 @@ body {
 .header-name { display: flex; flex-direction: column; }
 .header-name.right { text-align: right; }
 .pair-name-display input {
-  background: transparent; border: none;
+  background: transparent;
+  border: none;
   border-bottom: 1px solid rgba(255,255,255,0.3);
-  color: white; font-family: 'Zen Antique', serif;
-  font-size: 22px; text-align: center; width: 100%; outline: none; letter-spacing: 3px;
+  color: var(--panel-text-color);
+  font-family: 'Zen Antique', serif;
+  font-size: 22px;
+  text-align: center;
+  width: 100%;
+  outline: none;
+  letter-spacing: 3px;
 }
 .pair-name-display input:focus { border-bottom-color: rgba(255,255,255,0.8); }
 .header-name-input {
-  background: transparent; border: none;
+  background: transparent;
+  border: none;
   border-bottom: 1px solid rgba(255,255,255,0.2);
-  color: rgba(255,255,255,0.9); font-family: 'Zen Antique', serif;
-  font-size: 13px; outline: none; width: 100%;
+  color: var(--panel-text-color);
+  font-family: 'Zen Antique', serif;
+  font-size: 13px;
+  outline: none;
+  width: 100%;
 }
 .header-name-input:focus { border-bottom-color: rgba(255,255,255,0.8); }
 
@@ -166,10 +176,15 @@ body {
 .field-group { display: flex; flex-direction: column; gap: 2px; }
 .field-label { font-size: 9px; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 1px; }
 .field-input {
-  background: transparent; border: none;
+  background: transparent;
+  border: none;
   border-bottom: 1px solid rgba(255,255,255,0.2);
-  font-size: 11px; color: rgba(255,255,255,0.9); outline: none;
-  width: 100%; padding: 2px 0; font-family: 'Noto Sans JP', sans-serif;
+  font-size: 11px;
+  color: var(--panel-text-color);
+  outline: none;
+  width: 100%;
+  padding: 2px 0;
+  font-family: 'Noto Sans JP', sans-serif;
 }
 .field-input:focus { border-bottom-color: rgba(255,255,255,0.8); }
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -180,15 +195,34 @@ body {
 .stat-label { font-size: 9px; color: rgba(255,255,255,0.45); width: 26px; flex-shrink: 0; text-transform: uppercase; }
 .stat-bar-wrap { flex: 1; height: 6px; background: rgba(255,255,255,0.12); border-radius: 3px; overflow: hidden; cursor: pointer; }
 .stat-bar-fill { height: 100%; border-radius: 3px; transition: width 0.15s; background: #7c3aed; }
-.stat-input { width: 26px; background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.2); font-size: 9px; text-align: center; color: rgba(255,255,255,0.8); outline: none; font-family: 'Noto Sans JP', sans-serif; }
-
+.stat-input {
+  width: 26px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+  font-size: 9px;
+  text-align: center;
+  color: var(--panel-text-color);
+  outline: none;
+  font-family: 'Noto Sans JP', sans-serif;
+}
 /* traits */
 .section-title { font-family: 'Zen Antique', serif; font-size: 13px; color: rgba(255,255,255,0.7); margin-bottom: 4px; }
 .trait-list { display: flex; flex-direction: column; gap: 4px; }
 .trait-item { display: flex; align-items: center; gap: 4px; }
 .trait-bullet { font-size: 10px; color: rgba(255,255,255,0.3); flex-shrink: 0; }
-.trait-input { flex: 1; background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.15); font-size: 11px; color: rgba(255,255,255,0.85); outline: none; font-family: 'Noto Sans JP', sans-serif; padding: 2px 0; }
-.trait-input:focus { border-bottom-color: rgba(255,255,255,0.8); }
+.trait-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+  font-size: 11px;
+  color: var(--panel-text-color);
+  outline: none;
+  font-family: 'Noto Sans JP', sans-serif;
+  padding: 2px 0;
+}
+  .trait-input:focus { border-bottom-color: rgba(255,255,255,0.8); }
 
 /* ── CENTER PANEL ── */
 .center-panel {
