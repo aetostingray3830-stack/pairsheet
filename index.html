@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ペアキャラクターシート</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Zen+Antique&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Kaisei+Decol&family=Rampart+One&family=Reggae+One&family=BIZ+UDMincho&family=DotGothic16&family=Gothic+A1&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -361,6 +362,17 @@ body {
     <select id="txtMode" onchange="applyTxtStyle()">
       <option value="horizontal">横</option><option value="vertical">縦</option>
     </select>
+    <label>フォント</label>
+<select id="txtFont" onchange="applyTxtStyle()">
+  <option value="'Noto Sans JP', sans-serif">Noto Sans</option>
+  <option value="'Dela Gothic One', cursive">Dela Gothic One</option>
+  <option value="'Kaisei Decol', serif">Kaisei Decol</option>
+  <option value="'Rampart One', cursive">Rampart One</option>
+  <option value="'Reggae One', cursive">Reggae One</option>
+  <option value="'BIZ UDMincho', serif">BIZ UDMincho</option>
+  <option value="'DotGothic16', sans-serif">DotGothic16</option>
+  <option value="'Gothic A1', sans-serif">Gothic A1</option>
+</select>
   </div>
 
   <span class="sep">|</span>
@@ -790,16 +802,32 @@ function makeResizableImg(el, handle) {
 
 /* ========== TEXT STYLE ========== */
 function applyTxtStyle() {
-  if(!selectedItem||!selectedItem.classList.contains('float-txt')) return;
-  const text=selectedItem.querySelector('.free-text');
-  text.style.color=document.getElementById('txtColor').value;
-  const sz=document.getElementById('txtSize').value;
-  text.style.fontSize=sz+'px';
-  text.style.textAlign=document.getElementById('txtAlign').value;
-  text.style.fontWeight=document.getElementById('txtWeight').value;
-  text.style.writingMode='horizontal-tb';
-  text.style.textOrientation='mixed';
-  document.getElementById('txtSizeVal').textContent=sz;
+  if (!selectedBox) return;
+
+  const text = selectedBox.querySelector(".free-text");
+
+  const color = document.getElementById("txtColor").value;
+  const size = document.getElementById("txtSize").value;
+  const align = document.getElementById("txtAlign").value;
+  const weight = document.getElementById("txtWeight").value;
+  const mode = document.getElementById("txtMode").value;
+  const font = document.getElementById("txtFont").value;
+
+  text.style.color = color;
+  text.style.fontSize = size + "px";
+  text.style.textAlign = align;
+  text.style.fontWeight = weight;
+  text.style.fontFamily = font;
+
+  if (mode === "vertical") {
+    text.style.writingMode = "vertical-rl";
+    text.style.textOrientation = "upright";
+  } else {
+    text.style.writingMode = "horizontal-tb";
+    text.style.textOrientation = "mixed";
+  }
+
+  document.getElementById("txtSizeVal").textContent = size;
 }
 
 function rgbToHex(str) {
