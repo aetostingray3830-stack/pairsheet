@@ -1324,19 +1324,14 @@ function loadPortrait(inp, imgId, boxId) {
 
   if (selectedBox) selectedBox.classList.remove("selected");
 
-  document
-    .querySelectorAll(".float-txt-del")
-    .forEach((b) => (b.style.opacity = "0"));
-  document
-    .querySelectorAll(".float-txt-resize")
-    .forEach((b) => (b.style.opacity = "0"));
-  document
-    .querySelectorAll("input[type=file]")
-    .forEach((i) => (i.style.display = "none"));
+  document.querySelectorAll(".float-txt-del").forEach(b => b.style.opacity = "0");
+  document.querySelectorAll(".float-txt-resize").forEach(b => b.style.opacity = "0");
+  document.querySelectorAll("input[type=file]").forEach(i => i.style.display = "none");
 
   const replaced = replaceInputsForExport();
+  const verticalChanged = replaceVerticalTextForExport();
 
-  await new Promise((r) => setTimeout(r, 150));
+  await new Promise(r => setTimeout(r, 150));
 
   try {
     const c = await html2canvas(document.getElementById("sheet"), {
@@ -1344,8 +1339,26 @@ function loadPortrait(inp, imgId, boxId) {
       useCORS: true,
       allowTaint: true,
       backgroundColor: "#d4d0d8",
-      logging: false,
+      logging: false
     });
+
+    const a = document.createElement("a");
+    a.download = "pair_sheet.png";
+    a.href = c.toDataURL("image/png");
+    a.click();
+  } catch (e) {
+    alert("書き出しに失敗しました: " + e.message);
+  }
+
+  restoreVerticalTextAfterExport(verticalChanged);
+  restoreInputsAfterExport(replaced);
+
+  document.getElementById("colorPickRow").style.display = "flex";
+  document.querySelectorAll(".float-txt-del").forEach(b => b.style.opacity = "");
+  document.querySelectorAll(".float-txt-resize").forEach(b => b.style.opacity = "");
+  document.querySelectorAll("input[type=file]").forEach(i => i.style.display = "");
+  ov.classList.remove("show");
+}
 
     const a = document.createElement("a");
     a.download = "pair_sheet.png";
@@ -1541,17 +1554,6 @@ function loadPortrait(inp, imgId, boxId) {
         });
       }
 
-      document.addEventListener("mousedown", (e) => {
-        if (
-          selectedBox &&
-          !selectedBox.contains(e.target) &&
-          !document.getElementById("txtStyleBar").contains(e.target)
-        ) {
-          selectedBox.classList.remove("selected");
-          selectedBox = null;
-        }
-      });
-
 function setPortraitColor(boxId, color) {
   const box = document.getElementById(boxId);
   box.style.backgroundColor = color;
@@ -1570,6 +1572,48 @@ function setPortraitColor(boxId, color) {
       buildTraits("traits1b", 3);
       buildTraits("traits2a", 3);
       buildTraits("traits2b", 3);
+
+      function replaceVerticalTextForExport() {
+  const changed = [];
+
+  document.querySelectorAll('.free-text').forEach((el) => {
+    const style = getComputedStyle(el);
+    const isVertical = style.writingMode === 'vertical-rl' || style.writingMode === 'vertical-lr';
+
+    if (!isVertical) return;
+
+    const originalHTML = el.innerHTML;
+    const originalWritingMode = el.style.writingMode;
+    const originalTextOrientation = el.style.textOrientation;
+    const originalWhiteSpace = el.style.whiteSpace;
+
+    const text = el.innerText || '';
+    el.innerHTML = text.split('').join('<br>');
+
+    el.style.writingMode = 'horizontal-tb';
+    el.style.textOrientation = 'mixed';
+    el.style.whiteSpace = 'normal';
+
+    changed.push({
+      el,
+      originalHTML,
+      originalWritingMode,
+      originalTextOrientation,
+      originalWhiteSpace
+    });
+  });
+
+  return changed;
+}
+
+function restoreVerticalTextAfterExport(changed) {
+  changed.forEach((item) => {
+    item.el.innerHTML = item.originalHTML;
+    item.el.style.writingMode = item.originalWritingMode;
+    item.el.style.textOrientation = item.originalTextOrientation;
+    item.el.style.whiteSpace = item.originalWhiteSpace;
+  });
+}
     </script>
   </body>
 </html>
