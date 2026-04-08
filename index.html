@@ -1103,17 +1103,6 @@
 <script>
 let selectedBox = null;
 
-document.addEventListener("mousedown", (e) => {
-  const control = document.querySelector(".control-panel");
-
-  if (!selectedBox) return;
-  if (selectedBox.contains(e.target)) return;
-  if (control.contains(e.target)) return;
-
-  selectedBox.classList.remove("selected");
-  selectedBox = null;
-});
-
 const STATS = [
   { l: "STR", v: 14 },
   { l: "CON", v: 17 },
