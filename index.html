@@ -19,17 +19,24 @@ body {
   overflow-x: hidden;
 }
 
+  :root {
+  --panel-text-color: rgba(255,255,255,0.9);
+}
+
+.header-name-input,
+.pair-name-display input,
+.field-input,
+.stat-input,
+.trait-input {
+  color: var(--panel-text-color);
+}
+
 /* ── 背景レイヤー ── */
 #bgLayer {
   position: fixed; inset: 0; z-index: 0;
   background: linear-gradient(135deg, #1a0a2e 0%, #0a1a2e 50%, #0e0a1e 100%);
   background-size: cover; background-position: center;
   transition: background 0.4s;
-}
-#bgLayer::after {
-  content: '';
-  position: absolute; inset: 0;
-  background: rgba(10,5,20,0.45);
 }
 
 /* ── ツールバー ── */
@@ -188,7 +195,7 @@ body {
   background: rgba(45,10,78,0.5);
   position: relative;
   display: flex; align-items: center; justify-content: center;
-  overflow: hidden; min-height: 600px; cursor: pointer;
+  overflow: hidden; min-height: 600px;
   border-left: 1px solid rgba(255,255,255,0.06);
   border-right: 1px solid rgba(255,255,255,0.06);
 }
@@ -300,11 +307,18 @@ body {
 
   <span class="sep">|</span>
 
+<div class="toolbar-group">
+  <label>入力文字</label>
+  <input type="color" value="#ffffff" oninput="document.documentElement.style.setProperty('--panel-text-color', this.value)">
+</div>
+  
   <!-- page background -->
   <div class="toolbar-group">
     <label>背景</label>
-    <button class="btn btn-secondary" style="padding:4px 8px;font-size:10px" onclick="document.getElementById('bgImgInput').click()">画像</button>
+    <button class="btn btn-secondary" style="padding:4px 8px;font-size:10px" onclick="document.getElementById('bgImgInput').click()">ページ画像</button>
     <input type="file" id="bgImgInput" accept="image/*" style="display:none" onchange="setBgImage(this)">
+    <button class="btn btn-secondary" style="padding:4px 8px;font-size:10px" onclick="document.getElementById('centerBgInput').click()">中央画像</button>
+    <input type="file" id="centerBgInput" accept="image/*" style="display:none" onchange="loadCenter(this)">
     <input type="color" class="tc-inp" value="#1a0a2e" onchange="setBgSolid(this.value)" title="単色背景">
     <button class="btn btn-secondary" style="padding:4px 8px;font-size:10px" onclick="clearBg()">クリア</button>
   </div>
@@ -374,9 +388,8 @@ body {
 
       <!-- CENTER -->
       <div class="center-panel" id="centerPanel">
-        <div class="center-label" id="centerLabel">クリックして<br>背景画像を追加</div>
+        <div class="center-label" id="centerLabel">中央背景はツールバーの「背景画像」から追加</div>
         <img class="center-bg-img" id="centerImg" src="" alt="">
-        <input type="file" accept="image/*" class="center-file-input" onchange="loadCenter(this)">
         <div id="floatLayer"></div>
         <div class="color-pick-row" id="colorPickRow">
           <div class="color-swatch active" style="background:#2d0a4e" onclick="setCenterBg('#2d0a4e',this)"></div>
@@ -589,11 +602,17 @@ function addFloatImage(inp) {
   wrap.className = 'float-img-wrap';
   wrap.style.left = '60px';
   wrap.style.top = (60 + layer.querySelectorAll('.float-img-wrap').length * 20) + 'px';
-  wrap.style.width = '200px';
-  wrap.style.height = '200px';
 
   const img = document.createElement('img');
   img.src = url;
+  // Set wrap size from natural image ratio once loaded
+  img.onload = () => {
+    const ratio = img.naturalWidth / img.naturalHeight;
+    const initW = 200;
+    wrap.style.width = initW + 'px';
+    wrap.style.height = Math.round(initW / ratio) + 'px';
+    wrap._ratio = ratio;
+  };
 
   const del = document.createElement('button');
   del.className = 'float-del';
@@ -650,13 +669,17 @@ function makeResizableTxt(el) {
 }
 
 function makeResizableImg(el, handle) {
-  let resizing=false, sx,sy,sw,sh;
-  handle.addEventListener('mousedown', e => { e.preventDefault(); e.stopPropagation(); resizing=true; sx=e.clientX; sy=e.clientY; sw=el.offsetWidth; sh=el.offsetHeight; });
+  let resizing=false, sx,sy,sw,sh,ratio;
+  handle.addEventListener('mousedown', e => {
+    e.preventDefault(); e.stopPropagation();
+    resizing=true; sx=e.clientX; sy=e.clientY; sw=el.offsetWidth; sh=el.offsetHeight;
+    ratio = el._ratio || (sw/sh);
+  });
   document.addEventListener('mousemove', e => {
     if(!resizing) return;
-    const nw=Math.max(40,sw+e.clientX-sx);
-    const nh=Math.max(40,sh+e.clientY-sy);
-    el.style.width=nw+'px'; el.style.height=nh+'px';
+    const nw = Math.max(40, sw + e.clientX - sx);
+    el.style.width = nw + 'px';
+    el.style.height = Math.round(nw / ratio) + 'px';
   });
   document.addEventListener('mouseup', ()=>{ resizing=false; });
 }
@@ -670,9 +693,8 @@ function applyTxtStyle() {
   text.style.fontSize=sz+'px';
   text.style.textAlign=document.getElementById('txtAlign').value;
   text.style.fontWeight=document.getElementById('txtWeight').value;
-  const mode=document.getElementById('txtMode').value;
-  text.style.writingMode=mode==='vertical'?'vertical-rl':'horizontal-tb';
-  text.style.textOrientation=mode==='vertical'?'upright':'mixed';
+  text.style.writingMode='horizontal-tb';
+  text.style.textOrientation='mixed';
   document.getElementById('txtSizeVal').textContent=sz;
 }
 
@@ -696,20 +718,57 @@ async function exportPNG() {
   document.querySelectorAll('.float-del').forEach(b=>b.style.opacity='0');
   document.querySelectorAll('.float-txt-resize').forEach(b=>b.style.opacity='0');
   document.querySelectorAll('.resize-handle').forEach(b=>b.style.opacity='0');
-  document.querySelectorAll('input[type=file]').forEach(i=>i.style.display='none');
-  document.querySelectorAll('.portrait-color-btn').forEach(b=>b.style.display='none');
+  document.querySelectorAll('input[type=file]').forEach(i=>i.style.display='none');  document.querySelectorAll('.portrait-color-btn').forEach(b=>b.style.display='none');
   document.querySelectorAll('.tag-color-btn').forEach(b=>b.style.display='none');
 
   // replace inputs with spans for html2canvas
+  // snap float-img-wrap size to actual image rendered size
+  const snapData = [];
+  document.querySelectorAll('.float-img-wrap').forEach(wrap => {
+    const img = wrap.querySelector('img');
+    const ratio = wrap._ratio || (img.naturalWidth / img.naturalHeight);
+    const w = wrap.offsetWidth;
+    const h = Math.round(w / ratio);
+    const prevH = wrap.style.height;
+    wrap.style.height = h + 'px';
+    snapData.push({ wrap, prevH });
+  });
+
   const replaced = replaceInputsForExport();
   await new Promise(r=>setTimeout(r,160));
 
   try {
-    const c=await html2canvas(document.getElementById('sheet'),{scale:2,useCORS:true,allowTaint:true,backgroundColor:null,logging:false});
-    const a=document.createElement('a'); a.download='pair_sheet.png'; a.href=c.toDataURL('image/png'); a.click();
+    const sheet = document.getElementById('sheet');
+    const bgLayer = document.getElementById('bgLayer');
+
+    // Capture sheet (transparent bg)
+    const sheetCanvas = await html2canvas(sheet, {scale:2, useCORS:true, allowTaint:true, backgroundColor:null, logging:false});
+
+    // Capture background layer at same size
+    const sheetRect = sheet.getBoundingClientRect();
+    const bgCanvas = await html2canvas(bgLayer, {
+      scale:2, useCORS:true, allowTaint:true, backgroundColor:'#1a0a2e', logging:false,
+      x: sheetRect.left + window.scrollX,
+      y: sheetRect.top + window.scrollY,
+      width: sheetRect.width,
+      height: sheetRect.height,
+      windowWidth: document.documentElement.scrollWidth,
+      windowHeight: document.documentElement.scrollHeight,
+    });
+
+    // Composite: bg first, then sheet on top
+    const final = document.createElement('canvas');
+    final.width = sheetCanvas.width;
+    final.height = sheetCanvas.height;
+    const ctx = final.getContext('2d');
+    ctx.drawImage(bgCanvas, 0, 0, final.width, final.height);
+    ctx.drawImage(sheetCanvas, 0, 0);
+
+    const a=document.createElement('a'); a.download='pair_sheet.png'; a.href=final.toDataURL('image/png'); a.click();
   } catch(e){ alert('書き出しに失敗しました: '+e.message); }
 
   restoreInputsAfterExport(replaced);
+  snapData.forEach(({wrap, prevH}) => { wrap.style.height = prevH; });
   document.getElementById('colorPickRow').style.display='flex';
   document.querySelectorAll('.float-del').forEach(b=>b.style.opacity='');
   document.querySelectorAll('.float-txt-resize').forEach(b=>b.style.opacity='');
