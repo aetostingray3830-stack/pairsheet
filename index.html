@@ -682,6 +682,8 @@ document.addEventListener('mousedown', e => {
 
 /* ========== FLOATING TEXTBOX ========== */
 function addTextBox() {
+  const font = document.getElementById("txtFont").value;
+text.style.fontFamily = font;
   const layer = document.getElementById('floatLayer');
   layer.style.pointerEvents = 'auto';
   const box = document.createElement('div');
