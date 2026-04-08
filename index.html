@@ -1554,17 +1554,6 @@ function loadPortrait(inp, imgId, boxId) {
         });
       }
 
-      document.addEventListener("mousedown", (e) => {
-        if (
-          selectedBox &&
-          !selectedBox.contains(e.target) &&
-          !document.getElementById("txtStyleBar").contains(e.target)
-        ) {
-          selectedBox.classList.remove("selected");
-          selectedBox = null;
-        }
-      });
-
 function setPortraitColor(boxId, color) {
   const box = document.getElementById(boxId);
   box.style.backgroundColor = color;
