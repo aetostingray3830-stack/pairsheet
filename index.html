@@ -935,7 +935,7 @@
                 <input class="field-input" placeholder="職業" />
               </div>
               <div class="field-group">
-                <div class="field-label">GENDER</div>
+                <div class="field-label">SEX</div>
                 <input class="field-input" placeholder="性別" />
               </div>
             </div>
@@ -1076,7 +1076,7 @@
                 <input class="field-input" placeholder="職業" />
               </div>
               <div class="field-group">
-                <div class="field-label">GENDER</div>
+                <div class="field-label">SEX</div>
                 <input class="field-input" placeholder="性別" />
               </div>
             </div>
@@ -1100,107 +1100,162 @@
     </div>
 
     <script>
-<script>
-let selectedBox = null;
+document.addEventListener('mousedown', e => {
+  const control = document.querySelector('.control-panel');
 
-const STATS = [
-  { l: "STR", v: 14 },
-  { l: "CON", v: 17 },
-  { l: "POW", v: 13 },
-  { l: "DEX", v: 6 },
-  { l: "APP", v: 18 },
-  { l: "SIZ", v: 16 },
-  { l: "INT", v: 13 },
-  { l: "EDU", v: 17 },
-];
+  if (!selectedBox) return;
+  if (selectedBox.contains(e.target)) return;
+  if (control.contains(e.target)) return;
 
-const MAX = 24;
-let statColor = "#7c3aed";
+  selectedBox.classList.remove('selected');
+  selectedBox = null;
+});
+      
+      const STATS = [
+        { l: "STR", v: 14 },
+        { l: "CON", v: 17 },
+        { l: "POW", v: 13 },
+        { l: "DEX", v: 6 },
+        { l: "APP", v: 18 },
+        { l: "SIZ", v: 16 },
+        { l: "INT", v: 13 },
+        { l: "EDU", v: 17 },
+      ];
+      const MAX = 24;
+      let statColor = "#7c3aed";
 
-function buildStats(id) {
-  const el = document.getElementById(id);
-  el.innerHTML = "";
+function replaceVerticalTextForExport() {
+  const changed = [];
 
-  STATS.forEach((s) => {
-    const d = document.createElement("div");
-    d.className = "stat-row";
-    d.innerHTML = `
-      <span class="stat-label">${s.l}</span>
+  document.querySelectorAll('.free-text').forEach((el) => {
+    const style = getComputedStyle(el);
+    const isVertical = style.writingMode === 'vertical-rl' || style.writingMode === 'vertical-lr';
+
+    if (!isVertical) return;
+
+    const originalHTML = el.innerHTML;
+    const originalWritingMode = el.style.writingMode;
+    const originalTextOrientation = el.style.textOrientation;
+    const originalWhiteSpace = el.style.whiteSpace;
+
+    const text = el.innerText || '';
+    el.innerHTML = text.split('').join('<br>');
+
+    el.style.writingMode = 'horizontal-tb';
+    el.style.textOrientation = 'mixed';
+    el.style.whiteSpace = 'normal';
+
+    changed.push({
+      el,
+      originalHTML,
+      originalWritingMode,
+      originalTextOrientation,
+      originalWhiteSpace
+    });
+  });
+
+  return changed;
+}
+
+function restoreVerticalTextAfterExport(changed) {
+  changed.forEach((item) => {
+    item.el.innerHTML = item.originalHTML;
+    item.el.style.writingMode = item.originalWritingMode;
+    item.el.style.textOrientation = item.originalTextOrientation;
+    item.el.style.whiteSpace = item.originalWhiteSpace;
+  });
+}
+      
+      function buildStats(id) {
+        const el = document.getElementById(id);
+        el.innerHTML = "";
+        STATS.forEach((s) => {
+          const d = document.createElement("div");
+          d.className = "stat-row";
+          d.innerHTML = `<span class="stat-label">${s.l}</span>
       <div class="stat-bar-wrap" onclick="clickBar(event,this)">
-        <div class="stat-bar-fill" style="width:${(s.v / MAX) * 100}%;background:${statColor}"></div>
+        <div class="stat-bar-fill" style="width:${
+          (s.v / MAX) * 100
+        }%;background:${statColor}"></div>
       </div>
-      <input class="stat-input" type="number" min="1" max="${MAX}" value="${s.v}" oninput="syncBar(this)">
-    `;
-    el.appendChild(d);
-  });
-}
+      <input class="stat-input" type="number" min="1" max="${MAX}" value="${
+            s.v
+          }" oninput="syncBar(this)">`;
+          el.appendChild(d);
+        });
+      }
 
-function syncBar(inp) {
-  const v = Math.min(MAX, Math.max(1, parseInt(inp.value) || 1));
-  inp.previousElementSibling.querySelector(".stat-bar-fill").style.width = (v / MAX) * 100 + "%";
-}
+      function syncBar(inp) {
+        const v = Math.min(MAX, Math.max(1, parseInt(inp.value) || 1));
+        inp.previousElementSibling.querySelector(".stat-bar-fill").style.width =
+          (v / MAX) * 100 + "%";
+      }
 
-function clickBar(e, wrap) {
-  const r = wrap.getBoundingClientRect();
-  const v = Math.max(1, Math.min(MAX, Math.round(((e.clientX - r.left) / r.width) * MAX)));
-  wrap.querySelector(".stat-bar-fill").style.width = (v / MAX) * 100 + "%";
-  wrap.nextElementSibling.value = v;
-}
+      function clickBar(e, wrap) {
+        const r = wrap.getBoundingClientRect();
+        const v = Math.max(
+          1,
+          Math.min(MAX, Math.round(((e.clientX - r.left) / r.width) * MAX))
+        );
+        wrap.querySelector(".stat-bar-fill").style.width =
+          (v / MAX) * 100 + "%";
+        wrap.nextElementSibling.value = v;
+      }
 
-function setStatColor(c, sw) {
-  statColor = c;
-  document.querySelectorAll(".stat-bar-fill").forEach((b) => {
-    b.style.background = c;
-  });
+      function setStatColor(c, sw) {
+        statColor = c;
+        document
+          .querySelectorAll(".stat-bar-fill")
+          .forEach((b) => (b.style.background = c));
+        if (sw) {
+          document
+            .querySelectorAll("#statGroup .tc")
+            .forEach((s) => s.classList.remove("active"));
+          sw.classList.add("active");
+        }
+      }
 
-  if (sw) {
-    document.querySelectorAll("#statGroup .tc").forEach((s) => s.classList.remove("active"));
-    sw.classList.add("active");
-  }
-}
+      function setTagColor(bg, text, sw) {
+        document.querySelectorAll(".tag-input").forEach((t) => {
+          t.style.background = bg;
+          t.style.color = text;
+        });
+        document.querySelectorAll(".tag-color-btn").forEach((b) => {
+          b.value = bg;
+          b.style.background = bg;
+        });
+        if (sw) {
+          document
+            .querySelectorAll("#tagGroup .tc")
+            .forEach((s) => s.classList.remove("active"));
+          sw.classList.add("active");
+        }
+      }
 
-function setTagColor(bg, text, sw) {
-  document.querySelectorAll(".tag-input").forEach((t) => {
-    t.style.background = bg;
-    t.style.color = text;
-  });
+      function applyTagColor(picker) {
+        const bg = picker.value;
+        const inp = picker.previousElementSibling;
+        inp.style.background = bg;
+        // auto text color: light bg -> dark text, dark bg -> white
+        const r = parseInt(bg.slice(1, 3), 16),
+          g = parseInt(bg.slice(3, 5), 16),
+          b = parseInt(bg.slice(5, 7), 16);
+        inp.style.color =
+          r * 0.299 + g * 0.587 + b * 0.114 > 128 ? "#222" : "#fff";
+        picker.style.background = bg;
+      }
 
-  document.querySelectorAll(".tag-color-btn").forEach((b) => {
-    b.value = bg;
-    b.style.background = bg;
-  });
-
-  if (sw) {
-    document.querySelectorAll("#tagGroup .tc").forEach((s) => s.classList.remove("active"));
-    sw.classList.add("active");
-  }
-}
-
-function applyTagColor(picker) {
-  const bg = picker.value;
-  const inp = picker.previousElementSibling;
-  inp.style.background = bg;
-
-  const r = parseInt(bg.slice(1, 3), 16);
-  const g = parseInt(bg.slice(3, 5), 16);
-  const b = parseInt(bg.slice(5, 7), 16);
-  inp.style.color = r * 0.299 + g * 0.587 + b * 0.114 > 128 ? "#222" : "#fff";
-
-  picker.style.background = bg;
-}
-
-function buildTraits(id, n) {
-  const el = document.getElementById(id);
-  el.innerHTML = "";
-
-  for (let i = 0; i < n; i++) {
-    const d = document.createElement("div");
-    d.className = "trait-item";
-    d.innerHTML =
-      '<span class="trait-bullet">・</span><input class="trait-input" placeholder="特徴を入力...">';
-    el.appendChild(d);
-  }
-}
+      function buildTraits(id, n) {
+        const el = document.getElementById(id);
+        el.innerHTML = "";
+        for (let i = 0; i < n; i++) {
+          const d = document.createElement("div");
+          d.className = "trait-item";
+          d.innerHTML =
+            '<span class="trait-bullet">・</span><input class="trait-input" placeholder="特徴を入力...">';
+          el.appendChild(d);
+        }
+      }
 
 function loadPortrait(inp, imgId, boxId) {
   if (!inp.files[0]) return;
@@ -1209,70 +1264,147 @@ function loadPortrait(inp, imgId, boxId) {
   const url = URL.createObjectURL(inp.files[0]);
 
   box.style.backgroundImage = `url('${url}')`;
-  box.style.backgroundRepeat = "no-repeat";
-  box.style.backgroundPosition = "center";
-  box.style.backgroundSize = "contain";
-  box.querySelector(".upload-hint").style.display = "none";
+  box.style.backgroundRepeat = 'no-repeat';
+  box.style.backgroundPosition = 'center';
+  box.style.backgroundSize = 'contain';
+
+  box.querySelector('.upload-hint').style.display = 'none';
 
   const img = document.getElementById(imgId);
   img.src = url;
 }
 
-function setPortraitColor(boxId, color) {
-  const box = document.getElementById(boxId);
-  box.style.backgroundColor = color;
-}
+      function loadCenter(inp) {
+        if (!inp.files[0]) return;
+        const img = document.getElementById("centerImg");
+        img.src = URL.createObjectURL(inp.files[0]);
+        img.style.display = "block";
+        document.getElementById("centerLabel").style.display = "none";
+      }
 
-function loadCenter(inp) {
-  if (!inp.files[0]) return;
+      function setBgColor(c, sw) {
+        document.getElementById("centerPanel").style.background = c;
+        if (sw) {
+          document
+            .querySelectorAll(".color-swatch")
+            .forEach((s) => s.classList.remove("active"));
+          sw.classList.add("active");
+        }
+      }
 
-  const img = document.getElementById("centerImg");
-  img.src = URL.createObjectURL(inp.files[0]);
-  img.style.display = "block";
-  document.getElementById("centerLabel").style.display = "none";
-}
+      function resetSheet() {
+        if (confirm("リセットしますか？")) location.reload();
+      }
 
-function setBgColor(c, sw) {
-  document.getElementById("centerPanel").style.background = c;
+      function replaceInputsForExport() {
+        const targets = document.querySelectorAll(
+          ".tag-input, .field-input, .trait-input, .stat-input, .header-name-input, .pair-name-display input"
+        );
 
-  if (sw) {
-    document.querySelectorAll(".color-swatch").forEach((s) => s.classList.remove("active"));
-    sw.classList.add("active");
+        const replaced = [];
+
+        targets.forEach((input) => {
+          const span = document.createElement("span");
+          const style = getComputedStyle(input);
+
+          span.textContent = input.value || input.placeholder || "";
+          span.style.display = "inline-block";
+          span.style.width = style.width;
+          span.style.minHeight = style.height;
+          span.style.font = style.font;
+          span.style.color = style.color;
+          span.style.background = style.backgroundColor;
+          span.style.borderTop = style.borderTop;
+          span.style.borderRight = style.borderRight;
+          span.style.borderBottom = style.borderBottom;
+          span.style.borderLeft = style.borderLeft;
+          span.style.borderRadius = style.borderRadius;
+          span.style.padding = style.padding;
+          span.style.lineHeight = style.lineHeight;
+          span.style.letterSpacing = style.letterSpacing;
+          span.style.textAlign = style.textAlign;
+          span.style.whiteSpace = "pre-wrap";
+          span.style.verticalAlign = "middle";
+          span.style.boxSizing = "border-box";
+
+          if (input.classList.contains("tag-input")) {
+            span.style.textAlign = "center";
+          }
+
+          if (input.classList.contains("header-name-input")) {
+            span.style.width = "100%";
+          }
+
+          if (input.closest(".pair-name-display")) {
+            span.style.width = "100%";
+            span.style.textAlign = "center";
+          }
+
+          input.style.display = "none";
+          input.parentNode.insertBefore(span, input.nextSibling);
+
+          replaced.push({ input, span });
+        });
+
+        return replaced;
+      }
+
+      function restoreInputsAfterExport(replaced) {
+        replaced.forEach(({ input, span }) => {
+          span.remove();
+          input.style.display = "";
+        });
+      }
+
+     async function exportPNG() {
+  const ov = document.getElementById("exportOverlay");
+  ov.classList.add("show");
+
+  await document.fonts.ready;
+
+  document.getElementById("colorPickRow").style.display = "none";
+
+  if (selectedBox) selectedBox.classList.remove("selected");
+
+  document.querySelectorAll(".float-txt-del").forEach(b => b.style.opacity = "0");
+  document.querySelectorAll(".float-txt-resize").forEach(b => b.style.opacity = "0");
+  document.querySelectorAll("input[type=file]").forEach(i => i.style.display = "none");
+
+  const replaced = replaceInputsForExport();
+  const verticalChanged = replaceVerticalTextForExport();
+
+  await new Promise(r => setTimeout(r, 150));
+
+  try {
+    const c = await html2canvas(document.getElementById("sheet"), {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: "#d4d0d8",
+      logging: false
+    });
+
+    const a = document.createElement("a");
+    a.download = "pair_sheet.png";
+    a.href = c.toDataURL("image/png");
+    a.click();
+  } catch (e) {
+    alert("書き出しに失敗しました: " + e.message);
   }
+
+  restoreVerticalTextAfterExport(verticalChanged);
+  restoreInputsAfterExport(replaced);
+
+  document.getElementById("colorPickRow").style.display = "flex";
+  document.querySelectorAll(".float-txt-del").forEach(b => b.style.opacity = "");
+  document.querySelectorAll(".float-txt-resize").forEach(b => b.style.opacity = "");
+  document.querySelectorAll("input[type=file]").forEach(i => i.style.display = "");
+  ov.classList.remove("show");
 }
+      /* ===== FLOATING TEXTBOXES ===== */
+      let selectedBox = null;
 
-function resetSheet() {
-  if (confirm("リセットしますか？")) location.reload();
-}
-
-function syncName(n, val) {
-  const header = document.getElementById("headerName" + n);
-  const charField = document.getElementById("charName" + n);
-
-  if (document.activeElement === header) {
-    charField.value = val;
-  } else {
-    header.value = val;
-  }
-}
-
-function rgbToHex(str) {
-  if (!str) return "#ffffff";
-  if (str.startsWith("#")) return str;
-
-  const m = str.match(/\d+/g);
-  if (!m) return "#ffffff";
-
-  return (
-    "#" +
-    m
-      .slice(0, 3)
-      .map((x) => parseInt(x).toString(16).padStart(2, "0"))
-      .join("")
-  );
-}
-
-function addTextBox() {
+      function addTextBox() {
   const layer = document.getElementById("floatLayer");
   layer.style.pointerEvents = "auto";
 
@@ -1285,52 +1417,38 @@ function addTextBox() {
 
   box.innerHTML = `
     <div class="free-text" contenteditable="true">テキストを入力…</div>
-    <button class="float-txt-del" type="button">✕</button>
+    <button class="float-txt-del" onclick="deleteBox(this.parentElement)">✕</button>
     <svg class="float-txt-resize" viewBox="0 0 10 10">
       <path d="M2 10 L10 2 M6 10 L10 6" stroke="white" stroke-width="1.5"/>
     </svg>
   `;
 
-  const del = box.querySelector(".float-txt-del");
-  del.addEventListener("click", (e) => {
-    e.stopPropagation();
-    deleteBox(box);
-  });
-
-  box.addEventListener("mousedown", (e) => {
-    if (
-      e.target.classList.contains("free-text") ||
-      e.target.classList.contains("float-txt-del") ||
-      e.target.classList.contains("float-txt-resize") ||
-      e.target.tagName === "path" ||
-      e.target.tagName === "svg"
-    ) {
-      return;
-    }
-
-    selectBox(box);
-  });
-
-  const text = box.querySelector(".free-text");
-  text.addEventListener("mousedown", (e) => {
-    selectBox(box);
-    e.stopPropagation();
-  });
-
   makeDraggable(box);
   makeResizable(box);
 
+  box.addEventListener("mousedown", (e) => {
+    if (
+      e.target.tagName !== "BUTTON" &&
+      e.target.tagName !== "path" &&
+      e.target.tagName !== "svg"
+    ) {
+      selectBox(box);
+    }
+  });
+
   layer.appendChild(box);
   selectBox(box);
+
+  const text = box.querySelector(".free-text");
   text.focus();
+
+  document.execCommand?.("selectAll", false, null);
 }
 
-function deleteBox(box) {
+      function deleteBox(box) {
   if (selectedBox === box) {
-    selectedBox.classList.remove("selected");
     selectedBox = null;
   }
-
   box.remove();
 
   const layer = document.getElementById("floatLayer");
@@ -1339,17 +1457,16 @@ function deleteBox(box) {
   }
 }
 
-function selectBox(box) {
-  if (selectedBox) {
-    selectedBox.classList.remove("selected");
-  }
-
+      function selectBox(box) {
+  if (selectedBox) selectedBox.classList.remove("selected");
   selectedBox = box;
   box.classList.add("selected");
 
   const text = box.querySelector(".free-text");
 
-  document.getElementById("txtColor").value = rgbToHex(text.style.color || "#ffffff");
+  document.getElementById("txtColor").value = rgbToHex(
+    text.style.color || "#ffffff"
+  );
 
   const sz = parseInt(text.style.fontSize) || 13;
   document.getElementById("txtSize").value = sz;
@@ -1361,7 +1478,7 @@ function selectBox(box) {
     text.style.writingMode === "vertical-rl" ? "vertical" : "horizontal";
 }
 
-function applyTxtStyle() {
+      function applyTxtStyle() {
   if (!selectedBox) return;
 
   const text = selectedBox.querySelector(".free-text");
@@ -1387,20 +1504,29 @@ function applyTxtStyle() {
   document.getElementById("txtSizeVal").textContent = size;
 }
 
-function makeDraggable(el) {
+      function rgbToHex(str) {
+        if (str.startsWith("#")) return str;
+        const m = str.match(/\d+/g);
+        if (!m) return "#ffffff";
+        return (
+          "#" +
+          m
+            .slice(0, 3)
+            .map((x) => parseInt(x).toString(16).padStart(2, "0"))
+            .join("")
+        );
+      }
+
+      function makeDraggable(el) {
   let ox, oy, sx, sy, dragging = false;
 
   el.addEventListener("mousedown", (e) => {
     if (
       e.target.classList.contains("free-text") ||
-      e.target.classList.contains("float-txt-del") ||
-      e.target.classList.contains("float-txt-resize") ||
       e.target.tagName === "BUTTON" ||
       e.target.tagName === "path" ||
       e.target.tagName === "svg"
-    ) {
-      return;
-    }
+    ) return;
 
     e.preventDefault();
     dragging = true;
@@ -1421,207 +1547,62 @@ function makeDraggable(el) {
   });
 }
 
-function makeResizable(el) {
-  const handle = el.querySelector(".float-txt-resize");
-  let resizing = false;
-  let sx, sy, sw, sh;
+      function makeResizable(el) {
+        const handle = el.querySelector(".float-txt-resize");
+        let resizing = false,
+          sx,
+          sy,
+          sw,
+          sh;
+        handle.addEventListener("mousedown", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          resizing = true;
+          sx = e.clientX;
+          sy = e.clientY;
+          sw = el.offsetWidth;
+          sh = el.offsetHeight;
+        });
+        document.addEventListener("mousemove", (e) => {
+          if (!resizing) return;
+          el.style.width = Math.max(60, sw + e.clientX - sx) + "px";
+          el.style.height = Math.max(28, sh + e.clientY - sy) + "px";
+        });
+        document.addEventListener("mouseup", () => {
+          resizing = false;
+        });
+      }
 
-  handle.addEventListener("mousedown", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    resizing = true;
-    sx = e.clientX;
-    sy = e.clientY;
-    sw = el.offsetWidth;
-    sh = el.offsetHeight;
-  });
+      document.addEventListener("mousedown", (e) => {
+        if (
+          selectedBox &&
+          !selectedBox.contains(e.target) &&
+          !document.getElementById("txtStyleBar").contains(e.target)
+        ) {
+          selectedBox.classList.remove("selected");
+          selectedBox = null;
+          document.getElementById("txtStyleBar").style.display = "none";
+        }
+      });
 
-  document.addEventListener("mousemove", (e) => {
-    if (!resizing) return;
-    el.style.width = Math.max(60, sw + e.clientX - sx) + "px";
-    el.style.height = Math.max(28, sh + e.clientY - sy) + "px";
-  });
-
-  document.addEventListener("mouseup", () => {
-    resizing = false;
-  });
+function setPortraitColor(boxId, color) {
+  const box = document.getElementById(boxId);
+  box.style.backgroundColor = color;
 }
 
-function replaceInputsForExport() {
-  const targets = document.querySelectorAll(
-    ".tag-input, .field-input, .trait-input, .stat-input, .header-name-input, .pair-name-display input"
-  );
+      function syncName(n, val) {
+        const header = document.getElementById("headerName" + n);
+        const charField = document.getElementById("charName" + n);
+        if (document.activeElement === header) charField.value = val;
+        else header.value = val;
+      }
 
-  const replaced = [];
-
-  targets.forEach((input) => {
-    const span = document.createElement("span");
-    const style = getComputedStyle(input);
-
-    span.textContent = input.value || input.placeholder || "";
-    span.style.display = "inline-block";
-    span.style.width = style.width;
-    span.style.minHeight = style.height;
-    span.style.font = style.font;
-    span.style.color = style.color;
-    span.style.background = style.backgroundColor;
-    span.style.borderTop = style.borderTop;
-    span.style.borderRight = style.borderRight;
-    span.style.borderBottom = style.borderBottom;
-    span.style.borderLeft = style.borderLeft;
-    span.style.borderRadius = style.borderRadius;
-    span.style.padding = style.padding;
-    span.style.lineHeight = style.lineHeight;
-    span.style.letterSpacing = style.letterSpacing;
-    span.style.textAlign = style.textAlign;
-    span.style.whiteSpace = "pre-wrap";
-    span.style.verticalAlign = "middle";
-    span.style.boxSizing = "border-box";
-
-    if (input.classList.contains("tag-input")) {
-      span.style.textAlign = "center";
-    }
-
-    if (input.classList.contains("header-name-input")) {
-      span.style.width = "100%";
-    }
-
-    if (input.closest(".pair-name-display")) {
-      span.style.width = "100%";
-      span.style.textAlign = "center";
-    }
-
-    input.style.display = "none";
-    input.parentNode.insertBefore(span, input.nextSibling);
-
-    replaced.push({ input, span });
-  });
-
-  return replaced;
-}
-
-function restoreInputsAfterExport(replaced) {
-  replaced.forEach(({ input, span }) => {
-    span.remove();
-    input.style.display = "";
-  });
-}
-
-function replaceVerticalTextForExport() {
-  const changed = [];
-
-  document.querySelectorAll(".free-text").forEach((el) => {
-    const style = getComputedStyle(el);
-    const isVertical =
-      style.writingMode === "vertical-rl" || style.writingMode === "vertical-lr";
-
-    if (!isVertical) return;
-
-    const originalHTML = el.innerHTML;
-    const originalWritingMode = el.style.writingMode;
-    const originalTextOrientation = el.style.textOrientation;
-    const originalWhiteSpace = el.style.whiteSpace;
-
-    const text = el.innerText || "";
-    el.innerHTML = text.split("").join("<br>");
-
-    el.style.writingMode = "horizontal-tb";
-    el.style.textOrientation = "mixed";
-    el.style.whiteSpace = "normal";
-
-    changed.push({
-      el,
-      originalHTML,
-      originalWritingMode,
-      originalTextOrientation,
-      originalWhiteSpace,
-    });
-  });
-
-  return changed;
-}
-
-function restoreVerticalTextAfterExport(changed) {
-  changed.forEach((item) => {
-    item.el.innerHTML = item.originalHTML;
-    item.el.style.writingMode = item.originalWritingMode;
-    item.el.style.textOrientation = item.originalTextOrientation;
-    item.el.style.whiteSpace = item.originalWhiteSpace;
-  });
-}
-
-async function exportPNG() {
-  const ov = document.getElementById("exportOverlay");
-  ov.classList.add("show");
-
-  await document.fonts.ready;
-
-  document.getElementById("colorPickRow").style.display = "none";
-
-  if (selectedBox) {
-    selectedBox.classList.remove("selected");
-  }
-
-  document.querySelectorAll(".float-txt-del").forEach((b) => {
-    b.style.opacity = "0";
-  });
-
-  document.querySelectorAll(".float-txt-resize").forEach((b) => {
-    b.style.opacity = "0";
-  });
-
-  document.querySelectorAll('input[type="file"]').forEach((i) => {
-    i.style.display = "none";
-  });
-
-  const replaced = replaceInputsForExport();
-  const verticalChanged = replaceVerticalTextForExport();
-
-  await new Promise((r) => setTimeout(r, 150));
-
-  try {
-    const c = await html2canvas(document.getElementById("sheet"), {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: "#d4d0d8",
-      logging: false,
-    });
-
-    const a = document.createElement("a");
-    a.download = "pair_sheet.png";
-    a.href = c.toDataURL("image/png");
-    a.click();
-  } catch (e) {
-    alert("書き出しに失敗しました: " + e.message);
-  }
-
-  restoreVerticalTextAfterExport(verticalChanged);
-  restoreInputsAfterExport(replaced);
-
-  document.getElementById("colorPickRow").style.display = "flex";
-
-  document.querySelectorAll(".float-txt-del").forEach((b) => {
-    b.style.opacity = "";
-  });
-
-  document.querySelectorAll(".float-txt-resize").forEach((b) => {
-    b.style.opacity = "";
-  });
-
-  document.querySelectorAll('input[type="file"]').forEach((i) => {
-    i.style.display = "";
-  });
-
-  ov.classList.remove("show");
-}
-
-buildStats("stats1");
-buildStats("stats2");
-buildTraits("traits1a", 3);
-buildTraits("traits1b", 3);
-buildTraits("traits2a", 3);
-buildTraits("traits2b", 3);
-</script>
+      buildStats("stats1");
+      buildStats("stats2");
+      buildTraits("traits1a", 3);
+      buildTraits("traits1b", 3);
+      buildTraits("traits2a", 3);
+      buildTraits("traits2b", 3);
+    </script>
   </body>
 </html>
