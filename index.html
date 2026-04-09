@@ -497,7 +497,7 @@ body {
           <div class="field-group"><div class="field-label">SEX</div><input class="field-input" placeholder="性別"></div>
         </div>
         <div class="stats-section" id="stats2"></div>
-        <div><div class="section-title">Other Features</div><div class="trait-list" id="traits2a"></div></div>
+        <div><div class="section-title">Physical Appearance</div><div class="trait-list" id="traits2a"></div></div>
         <div><div class="section-title">Other Features</div><div class="trait-list" id="traits2b"></div></div>
       </div>
 
@@ -705,6 +705,9 @@ text.style.fontFamily = font;
   selectItem(box);
   const text=box.querySelector('.free-text'); text.focus();
   document.execCommand?.('selectAll',false,null);
+  const text = box.querySelector('.free-text');
+text.style.fontFamily = document.getElementById("txtFont").value;
+text.focus();
 }
 
 /* ========== FLOATING IMAGE ========== */
@@ -804,10 +807,9 @@ function makeResizableImg(el, handle) {
 
 /* ========== TEXT STYLE ========== */
 function applyTxtStyle() {
-  if (!selectedBox) return;
+  if (!selectedItem || !selectedItem.classList.contains("float-txt")) return;
 
-  const text = selectedBox.querySelector(".free-text");
-
+  const text = selectedItem.querySelector(".free-text");
   const color = document.getElementById("txtColor").value;
   const size = document.getElementById("txtSize").value;
   const align = document.getElementById("txtAlign").value;
