@@ -682,32 +682,44 @@ document.addEventListener('mousedown', e => {
 
 /* ========== FLOATING TEXTBOX ========== */
 function addTextBox() {
-  const font = document.getElementById("txtFont").value;
-text.style.fontFamily = font;
   const layer = document.getElementById('floatLayer');
   layer.style.pointerEvents = 'auto';
+
   const box = document.createElement('div');
   box.className = 'float-txt';
   box.style.left = '40px';
   box.style.top = (40 + layer.querySelectorAll('.float-txt').length * 44) + 'px';
   box.style.width = '160px';
+
   box.innerHTML = `
     <div class="free-text" contenteditable="true">テキストを入力…</div>
     <button class="float-del" onclick="removeFloat(this.parentElement)">✕</button>
-    <svg class="float-txt-resize" viewBox="0 0 10 10"><path d="M2 10 L10 2 M6 10 L10 6" stroke="white" stroke-width="1.5"/></svg>
+    <svg class="float-txt-resize" viewBox="0 0 10 10">
+      <path d="M2 10 L10 2 M6 10 L10 6" stroke="white" stroke-width="1.5"/>
+    </svg>
   `;
+
   makeDraggable(box, true);
   makeResizableTxt(box);
+
   box.addEventListener('mousedown', e => {
-    if(e.target.tagName!=='BUTTON'&&e.target.tagName!=='path'&&e.target.tagName!=='svg') selectItem(box);
+    if (
+      e.target.tagName !== 'BUTTON' &&
+      e.target.tagName !== 'path' &&
+      e.target.tagName !== 'svg'
+    ) {
+      selectItem(box);
+    }
   });
+
   layer.appendChild(box);
   selectItem(box);
-  const text=box.querySelector('.free-text'); text.focus();
-  document.execCommand?.('selectAll',false,null);
+
   const text = box.querySelector('.free-text');
-text.style.fontFamily = document.getElementById("txtFont").value;
-text.focus();
+  text.style.fontFamily = document.getElementById("txtFont").value;
+  text.focus();
+
+  document.execCommand?.('selectAll', false, null);
 }
 
 /* ========== FLOATING IMAGE ========== */
